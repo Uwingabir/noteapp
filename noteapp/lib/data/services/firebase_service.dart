@@ -3,8 +3,17 @@ import '../../firebase_options.dart';
 
 class FirebaseService {
   static Future<void> initializeFirebase() async {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    } catch (e) {
+      // Firebase is already initialized, which is fine
+      if (e.toString().contains('duplicate-app')) {
+        print('Firebase already initialized');
+      } else {
+        rethrow;
+      }
+    }
   }
 }

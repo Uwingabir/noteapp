@@ -9,23 +9,28 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc({required AuthRepositoryInterface authRepository})
       : _authRepository = authRepository,
         super(AuthInitial()) {
-    
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthSignInRequested>(_onAuthSignInRequested);
     on<AuthSignUpRequested>(_onAuthSignUpRequested);
     on<AuthSignOutRequested>(_onAuthSignOutRequested);
+    on<AuthUserChanged>(_onAuthUserChanged);
 
     // Listen to auth state changes
     _authRepository.authStateChanges.listen((user) {
-      if (user != null) {
-        emit(AuthAuthenticated(user));
-      } else {
-        emit(AuthUnauthenticated());
-      }
+      add(AuthUserChanged(user));
     });
   }
 
-  void _onAuthCheckRequested(AuthCheckRequested event, Emitter<AuthState> emit) {
+  void _onAuthUserChanged(AuthUserChanged event, Emitter<AuthState> emit) {
+    if (event.user != null) {
+      emit(AuthAuthenticated(event.user!));
+    } else {
+      emit(AuthUnauthenticated());
+    }
+  }
+
+  void _onAuthCheckRequested(
+      AuthCheckRequested event, Emitter<AuthState> emit) {
     final user = _authRepository.getCurrentUser();
     if (user != null) {
       emit(AuthAuthenticated(user));

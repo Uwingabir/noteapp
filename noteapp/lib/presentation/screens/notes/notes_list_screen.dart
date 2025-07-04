@@ -27,9 +27,7 @@ class _NotesListScreenState extends State<NotesListScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authState = context.read<AuthBloc>().state;
       if (authState is AuthAuthenticated) {
-        context
-            .read<NotesBloc>()
-            .add(NotesFetchRequested(authState.user.uid));
+        context.read<NotesBloc>().add(NotesFetchRequested(authState.user.id));
       }
     });
   }
@@ -45,7 +43,7 @@ class _NotesListScreenState extends State<NotesListScreen> {
             context.read<NotesBloc>().add(
                   NotesAddRequested(
                     content: content,
-                    userId: authState.user.uid,
+                    userId: authState.user.id,
                   ),
                 );
           }
@@ -157,7 +155,7 @@ class _NotesListScreenState extends State<NotesListScreen> {
                         if (authState is AuthAuthenticated) {
                           context
                               .read<NotesBloc>()
-                              .add(NotesFetchRequested(authState.user.uid));
+                              .add(NotesFetchRequested(authState.user.id));
                         }
                       },
                       child: const Text('Try Again'),

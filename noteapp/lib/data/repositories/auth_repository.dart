@@ -1,31 +1,37 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../../domain/repositories/auth_repository_interface.dart';
+import '../../domain/entities/entities.dart';
 
 class AuthRepository implements AuthRepositoryInterface {
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final firebase_auth.FirebaseAuth _firebaseAuth =
+      firebase_auth.FirebaseAuth.instance;
 
   @override
-  Future<User?> signInWithEmailAndPassword(String email, String password) async {
+  Future<User?> signInWithEmailAndPassword(
+      String email, String password) async {
     try {
-      final UserCredential result = await _firebaseAuth.signInWithEmailAndPassword(
+      final firebase_auth.UserCredential result =
+          await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      return result.user;
-    } on FirebaseAuthException catch (e) {
+      return _convertFirebaseUserToDomainUser(result.user);
+    } on firebase_auth.FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     }
   }
 
   @override
-  Future<User?> createUserWithEmailAndPassword(String email, String password) async {
+  Future<User?> createUserWithEmailAndPassword(
+      String email, String password) async {
     try {
-      final UserCredential result = await _firebaseAuth.createUserWithEmailAndPassword(
+      final firebase_auth.UserCredential result =
+          await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      return result.user;
-    } on FirebaseAuthException catch (e) {
+      return _convertFirebaseUserToDomainUser(result.user);
+    } on firebase_auth.FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     }
   }
@@ -37,13 +43,25 @@ class AuthRepository implements AuthRepositoryInterface {
 
   @override
   User? getCurrentUser() {
-    return _firebaseAuth.currentUser;
+    return _convertFirebaseUserToDomainUser(_firebaseAuth.currentUser);
   }
 
   @override
-  Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
+  Stream<User?> get authStateChanges =>
+      _firebaseAuth.authStateChanges().map(_convertFirebaseUserToDomainUser);
 
-  String _handleAuthException(FirebaseAuthException e) {
+  User? _convertFirebaseUserToDomainUser(firebase_auth.User? firebaseUser) {
+    if (firebaseUser == null) return null;
+
+    return User(
+      id: firebaseUser.uid,
+      email: firebaseUser.email ?? '',
+      displayName: firebaseUser.displayName,
+      createdAt: firebaseUser.metadata.creationTime ?? DateTime.now(),
+    );
+  }
+
+  String _handleAuthException(firebase_auth.FirebaseAuthException e) {
     switch (e.code) {
       case 'user-not-found':
         return 'No user found with this email address.';

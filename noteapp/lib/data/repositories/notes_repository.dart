@@ -13,12 +13,17 @@ class NotesRepository implements NotesRepositoryInterface {
       final QuerySnapshot querySnapshot = await _firestore
           .collection(_collection)
           .where('userId', isEqualTo: userId)
-          .orderBy('updatedAt', descending: true)
           .get();
 
-      return querySnapshot.docs
+      // Convert to list and sort by updatedAt in memory
+      final notes = querySnapshot.docs
           .map((doc) => NoteModel.fromFirestore(doc))
           .toList();
+
+      // Sort by updatedAt in descending order (newest first)
+      notes.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+      return notes;
     } catch (e) {
       throw Exception('Failed to fetch notes: $e');
     }
